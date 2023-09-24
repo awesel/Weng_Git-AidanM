@@ -47,4 +47,10 @@ public class Commit {
         return (ldt.format(dtf));
     }
 
+    // creates tree for use in constructor
+    public String createTree(String fileName) throws Exception {
+        Tree tree = new Tree(fileName);
+        return Integer.toString(tree.hashCode());
+    }
+
 }
