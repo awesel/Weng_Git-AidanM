@@ -1,5 +1,12 @@
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -12,32 +19,81 @@ public class Commit {
     String date;
     String summary;
 
+    // not sure if necessary
+    String prevCommit;
+
     String treeHash;
 
-    // no previous
-    public Commit(String author, String summary) {
+    // creates a Commit file
+    public Commit(String author, String summary, String treePath) throws Exception {
         // create commit file
+        // this.author = author;
+        // this.summary = summary;
+
+        File file = new File("Commit");
+        file.createNewFile();
+
+        String treeHash = Blob.sha1(Blob.read(treePath));
+
+        // write to file
+        StringBuilder sb = new StringBuilder("");
+
+        // tree, prev, next, author, date, summary
+        // -------------------------- surprise ternary :D
+        sb.append(treeHash + "\n" + ((prevCommit == null) ? "" : prevCommit) + "\n\n" + author + "\n"
+                + getDate()
+                + "\n" + summary);
+
+        FileWriter fw = new FileWriter("Commit");
+        fw.write(sb.toString());
+
+        fw.close();
 
     }
 
-    // yes previous
-    public Commit(String author, String summary, String previous) {
-        // create commit file
+    // creates file and puts in objects folder & updates previous one
+    public void commit() throws Exception {
+
+        // create the file in objects folder
+        Blob.blob("Commit");
+        String commitHash = Blob.sha1("Commit");
+
+        // check if has previous commit and add to it
+        // read & replaces line 3 (with "next hash")
+        File commitFile = new File("objects", commitHash);
+        if (commitFile.exists()) {
+
+            // read
+            StringBuilder sb = new StringBuilder("");
+            BufferedReader br = new BufferedReader(new FileReader(commitFile));
+            int line = 1;
+
+            while (br.ready()) {
+                if (line != 3) {
+                    sb.append(br.readLine());
+                } else {
+                    sb.append(prevCommit);
+                    br.readLine();
+                }
+                line++;
+            }
+
+            br.close();
+
+            // write
+            FileWriter fw = new FileWriter(commitFile);
+            fw.write(sb.toString());
+
+            fw.close();
+
+        }
+
+        // set previous commit to current one
+        prevCommit = commitHash;
 
     }
 
-    // creates file and puts in objects folder
-    public void commit(String treePath) throws NoSuchAlgorithmException, IOException {
-
-        // hash tree
-        treeHash = Blob.sha1(Blob.read(treePath));
-
-        // blobify commit file
-        // read & skips line 3
-
-    }
-
-    public String getDate() {
+    public static String getDate() {
         // long milliTime = System.currentTimeMillis();
 
         LocalDateTime ldt = LocalDateTime.now();
@@ -48,9 +104,22 @@ public class Commit {
     }
 
     // creates tree for use in constructor
-    public String createTree(String fileName) throws Exception {
+    public static String createTree(String fileName) throws Exception {
         Tree tree = new Tree(fileName);
         return Integer.toString(tree.hashCode());
+    }
+
+    public static void main(String[] args) throws Exception {
+        Tree testTree = new Tree("Tree");
+
+        testTree.add("test.txt");
+
+        Commit commitTest = new Commit("me", "ballsballsballs", "Tree");
+
+        commitTest.commit();
+
+        System.out.println("test done");
+
     }
 
 }
