@@ -9,7 +9,7 @@ import java.security.NoSuchAlgorithmException;
 import java.io.*;
 
 public class Blob {
-    public static void blob(String fileName) throws IOException, NoSuchAlgorithmException {
+    public static void blob(String fileName) throws Exception {
         try {
             String content = read(fileName);
             String hash = sha1(content);
@@ -29,6 +29,8 @@ public class Blob {
             PrintWriter pw = new PrintWriter(newFile);
             pw.print(content);
             pw.close();
+
+            // throw new Exception(filePath);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }

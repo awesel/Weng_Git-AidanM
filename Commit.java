@@ -16,13 +16,15 @@ import java.time.format.DateTimeFormatter;
 public class Commit {
 
     String author;
-    String date;
     String summary;
 
     // not sure if necessary
     String prevCommit;
 
     String treeHash;
+
+    // for testing purposes only
+    String date;
 
     // creates a Commit file
     public Commit(String author, String summary, String treePath) throws Exception {
@@ -35,13 +37,19 @@ public class Commit {
 
         String treeHash = Blob.sha1(Blob.read(treePath));
 
+        // throw new Exception(treeHash);
+
         // write to file
         StringBuilder sb = new StringBuilder("");
 
         // tree, prev, next, author, date, summary
+
+        date = getDate();
+
         // -------------------------- surprise ternary :D
-        sb.append(treeHash + "\n" + ((prevCommit == null) ? "" : prevCommit) + "\n\n" + author + "\n"
-                + getDate()
+        sb.append(treeHash + "\n" + ((prevCommit == null) ? "" : prevCommit) + "\n\n"
+                + author + "\n"
+                + date
                 + "\n" + summary);
 
         FileWriter fw = new FileWriter("Commit");
@@ -51,12 +59,23 @@ public class Commit {
 
     }
 
+    public String returnSavedDate() {
+        return date;
+    }
+
+    public String returnPrevCommitHash() {
+        return prevCommit;
+    }
+
     // creates file and puts in objects folder & updates previous one
     public void commit() throws Exception {
 
         // create the file in objects folder
         Blob.blob("Commit");
-        String commitHash = Blob.sha1("Commit");
+        String commitHash = Blob.sha1(Blob.read("Commit"));
+
+        // set previous commit to current one
+        prevCommit = commitHash;
 
         // check if has previous commit and add to it
         // read & replaces line 3 (with "next hash")
@@ -88,8 +107,7 @@ public class Commit {
 
         }
 
-        // set previous commit to current one
-        prevCommit = commitHash;
+        // throw new Exception(prevCommit);
 
     }
 
@@ -99,24 +117,37 @@ public class Commit {
         LocalDateTime ldt = LocalDateTime.now();
 
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("E, MMM dd yyyy HH:mm:ss");
-
+        System.out.println("date changed");
         return (ldt.format(dtf));
     }
 
     // creates tree for use in constructor
     public static String createTree(String fileName) throws Exception {
         Tree tree = new Tree(fileName);
+
         return Integer.toString(tree.hashCode());
     }
 
     public static void main(String[] args) throws Exception {
-        Tree testTree = new Tree("Tree");
+        PrintWriter pw = new PrintWriter(
+                ".\\test.txt");
 
+        pw.print("file 1");
+        pw.close();
+
+        Tree testTree = new Tree("Tree");
         testTree.add("test.txt");
 
-        Commit commitTest = new Commit("me", "ballsballsballs", "Tree");
+        String author = "author";
+        String summary = "summary";
+        String treePath = "Tree";
+        Commit commit = new Commit(author, summary, treePath);
 
-        commitTest.commit();
+        // String date = commit.returnSavedDate();
+
+        commit.commit();
+
+        System.out.println(commit.returnPrevCommitHash());
 
         System.out.println("test done");
 
