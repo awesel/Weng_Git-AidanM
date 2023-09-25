@@ -29,5 +29,7 @@ public class Tester {
         } else {
             System.out.println("false");
         }
+
+        System.out.println("test done");
     }
 }
